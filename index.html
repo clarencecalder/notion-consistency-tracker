@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consistency</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#111110;color:#EEECEA;min-height:100vh;padding:24px 18px;}
+.page{max-width:960px;margin:0 auto;}
+
+.hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px;}
+.hdr h1{font-size:32px;font-weight:700;letter-spacing:-0.5px;}
+.hdr p{font-size:12px;color:#6B6966;margin-top:3px;font-family:monospace;}
+.clock{font-family:monospace;font-size:12px;color:#6B6966;background:#1C1C1A;border:1px solid #2E2E2B;border-radius:8px;padding:7px 13px;}
+
+.hero{background:#1C1C1A;border:1px solid #2E2E2B;border-radius:14px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;gap:22px;}
+.ring{position:relative;flex-shrink:0;}
+.ring svg{display:block;transform:rotate(-90deg);}
+.rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.rpct{font-size:22px;font-weight:700;color:#EEECEA;line-height:1;}
+.rsub{font-size:10px;color:#6B6966;font-family:monospace;margin-top:1px;}
+.hi{flex:1;min-width:0;}
+.hday{font-size:18px;font-weight:600;color:#EEECEA;}
+.hdate{font-size:11px;color:#6B6966;font-family:monospace;margin-top:2px;margin-bottom:12px;}
+.hbw{background:#242422;border-radius:6px;height:5px;overflow:hidden;}
+.hbf{height:100%;background:linear-gradient(90deg,#4a8020,#8BC34A);border-radius:6px;transition:width .8s ease;}
+.hcts{display:flex;gap:16px;margin-top:8px;}
+.hct{font-size:12px;color:#6B6966;font-family:monospace;}
+.hct b{color:#EEECEA;font-weight:600;}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.sc{background:#1C1C1A;border:1px solid #2E2E2B;border-radius:12px;padding:14px;text-align:center;}
+.sv{font-size:24px;font-weight:700;color:#EEECEA;line-height:1;}
+.sl{font-size:11px;font-family:monospace;color:#6B6966;margin-top:4px;}
+
+.panel{background:#1C1C1A;border:1px solid #2E2E2B;border-radius:14px;overflow:hidden;margin-bottom:16px;}
+.ph{padding:12px 16px;border-bottom:1px solid #2E2E2B;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.pt{font-size:13px;font-weight:600;}
+.phright{display:flex;align-items:center;gap:10px;}
+.pbadge{font-family:monospace;font-size:11px;color:#6B6966;background:#242422;border:1px solid #2E2E2B;border-radius:20px;padding:2px 10px;}
+.wnav{display:flex;align-items:center;gap:6px;}
+.wnb{width:26px;height:26px;border-radius:7px;border:1px solid #2E2E2B;background:#242422;cursor:pointer;font-size:14px;color:#6B6966;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.wnb:hover:not(:disabled){background:#2E2E2B;color:#EEECEA;}
+.wnb:disabled{opacity:.3;cursor:default;}
+.wrlbl{font-family:monospace;font-size:11px;color:#6B6966;min-width:120px;text-align:center;}
+
+.gs{overflow-x:auto;}
+.grid{display:grid;grid-template-columns:190px repeat(7,1fr);min-width:520px;}
+
+/* header row */
+.ghc{padding:8px 4px 7px;text-align:center;border-bottom:1px solid #2E2E2B;}
+.ghc:first-child{text-align:left;padding-left:16px;}
+.gdn{display:block;font-family:monospace;font-size:10px;font-weight:600;color:#6B6966;}
+.gdd{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;font-size:12px;font-weight:600;color:#EEECEA;margin-top:2px;border-radius:50%;}
+.ghc.tod .gdn{color:#8BC34A;}
+.ghc.tod .gdd{background:#5A9E27;color:#fff;}
+
+/* pct row */
+.gpc{padding:6px 4px;text-align:center;border-bottom:1px solid #2E2E2B;background:#161614;}
+.gpc:first-child{text-align:left;padding-left:16px;font-size:11px;font-family:monospace;color:#6B6966;display:flex;align-items:center;}
+.gpn{display:block;font-family:monospace;font-size:11px;font-weight:600;margin-bottom:3px;}
+.gbw{height:3px;border-radius:3px;background:#2E2E2B;overflow:hidden;width:70%;margin:0 auto;}
+.gbf{height:100%;border-radius:3px;}
+
+/* habit row */
+.gnc{display:flex;align-items:center;gap:8px;padding:9px 9px 9px 16px;border-bottom:1px solid #2E2E2B;cursor:default;transition:background .12s;}
+.gnc:hover{background:#242422;}
+.gem{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.glb{flex:1;min-width:0;}
+.gnn{font-size:13px;color:#EEECEA;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gct{font-size:10px;font-family:monospace;color:#6B6966;margin-top:1px;}
+.gdel{opacity:0;background:none;border:none;cursor:pointer;color:#6B6966;font-size:12px;padding:2px 5px;border-radius:4px;transition:all .15s;flex-shrink:0;}
+.gnc:hover .gdel{opacity:1;}
+.gdel:hover{color:#E07040;background:#2A1A10;}
+
+/* toggle cell */
+.gtc{display:flex;align-items:center;justify-content:center;padding:9px 4px;border-bottom:1px solid #2E2E2B;cursor:pointer;transition:background .12s;}
+.gtc:hover:not(.fut){background:#242422;}
+.gtc.fut{cursor:not-allowed;pointer-events:none;}
+.dot{width:22px;height:22px;border-radius:6px;border:1.5px solid #2E2E2B;background:#242422;display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.34,1.56,.64,1);}
+.dot svg{opacity:0;transform:scale(.3);transition:all .18s cubic-bezier(.34,1.56,.64,1);}
+.gtc.done .dot{background:#5A9E27;border-color:#5A9E27;transform:scale(1.08);}
+.gtc.done .dot svg{opacity:1;transform:scale(1);}
+.gtc.fut .dot{opacity:.2;}
+
+/* total row */
+.gtr{background:#161614;text-align:center;padding:8px 4px;}
+.gtr:first-child{text-align:left;padding-left:16px;font-size:11px;font-family:monospace;color:#6B6966;display:flex;align-items:center;}
+.gtv{font-family:monospace;font-size:12px;font-weight:700;}
+
+.empty{padding:28px;text-align:center;color:#6B6966;font-size:13px;font-family:monospace;grid-column:1/-1;}
+
+.addrow{padding:10px 16px;display:flex;gap:8px;}
+.addinp{flex:1;border:1px solid #2E2E2B;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;background:#242422;color:#EEECEA;outline:none;transition:border-color .15s;}
+.addinp:focus{border-color:#5A9E27;}
+.addinp::placeholder{color:#6B6966;}
+.addbtn{background:#5A9E27;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600;transition:opacity .15s;}
+.addbtn:hover{opacity:.85;}
+
+@media(max-width:560px){
+  .hero{flex-direction:column;text-align:center;}
+  .hcts{justify-content:center;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hdr">
+    <div>
+      <h1>Consistency</h1>
+      <p id="todaylbl"></p>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+
+  <div class="hero">
+    <div class="ring">
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        <circle fill="none" stroke="#2E2E2B" stroke-width="6" cx="40" cy="40" r="33"/>
+        <circle fill="none" stroke="#8BC34A" stroke-width="6" stroke-linecap="round"
+          cx="40" cy="40" r="33" id="rfill"
+          stroke-dasharray="207.35" stroke-dashoffset="207.35"
+          style="transition:stroke-dashoffset .8s ease"/>
+      </svg>
+      <div class="rc">
+        <div class="rpct" id="rpct">0%</div>
+        <div class="rsub">today</div>
+      </div>
+    </div>
+    <div class="hi">
+      <div class="hday"  id="hday"></div>
+      <div class="hdate" id="hdate"></div>
+      <div class="hbw"><div class="hbf" id="hbf" style="width:0%"></div></div>
+      <div class="hcts">
+        <div class="hct"><b id="hdone">0</b> done</div>
+        <div class="hct"><b id="htot">0</b> total</div>
+        <div class="hct"><b id="hstr">0</b> streak 🔥</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="sc"><div class="sv" id="savg">—</div><div class="sl">7-day avg</div></div>
+    <div class="sc"><div class="sv" id="sbest">—</div><div class="sl">best day</div></div>
+    <div class="sc"><div class="sv" id="sstr">0</div><div class="sl">streak days</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="ph">
+      <span class="pt">Weekly Progress</span>
+      <div class="phright">
+        <span class="pbadge" id="hbadge">0 habits</span>
+        <div class="wnav">
+          <button class="wnb" id="bprev" onclick="shiftWeek(-1)">&#8249;</button>
+          <span class="wrlbl" id="wrlbl"></span>
+          <button class="wnb" id="bnext" onclick="shiftWeek(1)">&#8250;</button>
+        </div>
+      </div>
+    </div>
+    <div class="gs"><div class="grid" id="grid"></div></div>
+    <div class="addrow">
+      <input class="addinp" id="inp" placeholder="Add a habit or task…" maxlength="60"/>
+      <button class="addbtn" onclick="addHabit()">Add</button>
+    </div>
+  </div>
+
+</div>
+<script>
+var DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var EMOJIS = ['✅','📌','⭐','🎯','💪','🌱','🔥','✨','📝','🏃','🧠','💡','🌟','⚡','🎨'];
+var CATS   = ['health','learning','wellness','productivity','mindfulness','fitness','creativity','general'];
+
+var state = {
+  nextId: 6,
+  habits: [
+    {id:1,name:'Morning workout',       emoji:'🏋️',cat:'health'},
+    {id:2,name:'Read for 30 mins',      emoji:'📖',cat:'learning'},
+    {id:3,name:'Drink 8 glasses water', emoji:'💧',cat:'health'},
+    {id:4,name:'Meditate',              emoji:'🧘',cat:'wellness'},
+    {id:5,name:'Journal entry',         emoji:'✍️',cat:'mindfulness'}
+  ],
+  history: {}
+};
+
+var weekOffset = 0;
+
+function dkey(d) {
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
+function pad(n){ return String(n).padStart(2,'0'); }
+
+var TODAY = dkey(new Date());
+
+function isFut(d){ return dkey(d) > TODAY; }
+function ensure(k){ if(!state.history[k]) state.history[k]={done:[]}; }
+
+function weekDates(off) {
+  var t=new Date(), dow=t.getDay(), toMon=dow===0?-6:1-dow;
+  var mon=new Date(t); mon.setDate(t.getDate()+toMon+off*7);
+  var arr=[];
+  for(var i=0;i<7;i++){ var d=new Date(mon); d.setDate(mon.getDate()+i); arr.push(d); }
+  return arr;
+}
+
+// seed demo
+(function(){
+  var ids=state.habits.map(function(h){return h.id;});
+  for(var i=1;i<=13;i++){
+    var d=new Date(); d.setDate(d.getDate()-i);
+    var k=dkey(d);
+    var count=Math.floor(Math.random()*(ids.length+1));
+    var shuffled=ids.slice().sort(function(){return .5-Math.random();});
+    state.history[k]={done:shuffled.slice(0,count)};
+  }
+})();
+
+function dayPct(k){
+  var h=state.history[k];
+  if(!h||!state.habits.length) return 0;
+  return Math.round(h.done.length/state.habits.length*100);
+}
+
+function barCol(p){
+  if(p>=100) return '#5A9E27';
+  if(p>=60)  return '#7ab830';
+  if(p>=30)  return '#c49a20';
+  return '#E07040';
+}
+
+function calcStreak(){
+  var s=0, t=new Date();
+  for(var i=0;i<365;i++){
+    var d=new Date(t); d.setDate(t.getDate()-i);
+    var h=state.history[dkey(d)];
+    if(!h||!state.habits.length){ if(i===0) continue; break; }
+    if(h.done.length/state.habits.length>=.5) s++;
+    else if(i>0) break;
+  }
+  return s;
+}
+
+function habStreak(id){
+  var s=0, t=new Date();
+  for(var i=0;i<365;i++){
+    var d=new Date(t); d.setDate(t.getDate()-i);
+    var h=state.history[dkey(d)];
+    if(h&&h.done.indexOf(id)>-1) s++;
+    else if(i>0) break;
+  }
+  return s;
+}
+
+function renderHero(){
+  ensure(TODAY);
+  var comp=state.history[TODAY].done, tot=state.habits.length;
+  var pct=tot?Math.round(comp.length/tot*100):0;
+  document.getElementById('rpct').textContent=pct+'%';
+  document.getElementById('hdone').textContent=comp.length;
+  document.getElementById('htot').textContent=tot;
+  document.getElementById('hbf').style.width=pct+'%';
+  var circ=207.35;
+  document.getElementById('rfill').style.strokeDashoffset=circ-(pct/100)*circ;
+  var s=calcStreak();
+  document.getElementById('hstr').textContent=s;
+  document.getElementById('sstr').textContent=s;
+}
+
+function renderStats(){
+  var t=new Date(), pcts=[];
+  for(var i=1;i<=7;i++){
+    var d=new Date(t); d.setDate(t.getDate()-i);
+    var k=dkey(d);
+    if(state.history[k]) pcts.push(dayPct(k));
+  }
+  if(pcts.length){
+    var avg=Math.round(pcts.reduce(function(a,b){return a+b;},0)/pcts.length);
+    var best=Math.max.apply(null,pcts);
+    document.getElementById('savg').textContent=avg+'%';
+    document.getElementById('sbest').textContent=best+'%';
+  }
+}
+
+function renderGrid(){
+  var days=weekDates(weekOffset);
+  var f=days[0], l=days[6];
+  document.getElementById('wrlbl').textContent=
+    MONTHS[f.getMonth()].slice(0,3)+' '+f.getDate()+' – '+MONTHS[l.getMonth()].slice(0,3)+' '+l.getDate();
+  document.getElementById('bnext').disabled=weekOffset>=0;
+  document.getElementById('hbadge').textContent=state.habits.length+' habit'+(state.habits.length!==1?'s':'');
+
+  var h='';
+
+  // header
+  h+='<div class="ghc" style="display:flex;align-items:center;font-size:11px;font-family:monospace;color:#6B6966;">Habit</div>';
+  for(var i=0;i<days.length;i++){
+    var d=days[i], isT=dkey(d)===TODAY;
+    h+='<div class="ghc'+(isT?' tod':'')+'"><span class="gdn">'+DAYS[d.getDay()]+'</span><span class="gdd">'+d.getDate()+'</span></div>';
+  }
+
+  // pct row
+  h+='<div class="gpc">Daily %</div>';
+  for(var i=0;i<days.length;i++){
+    var d=days[i], k=dkey(d), fut=isFut(d), pct=fut?null:dayPct(k), col=fut?'#2E2E2B':barCol(pct||0);
+    h+='<div class="gpc"><span class="gpn" style="color:'+(fut?'#6B6966':col)+'">'+(fut?'–':pct+'%')+'</span><div class="gbw"><div class="gbf" style="width:'+(fut?0:pct)+'%;background:'+col+'"></div></div></div>';
+  }
+
+  // habits
+  if(!state.habits.length){
+    h+='<div class="empty">No habits yet — add one below.</div>';
+  } else {
+    for(var j=0;j<state.habits.length;j++){
+      var hab=state.habits[j], hs=habStreak(hab.id);
+      h+='<div class="gnc"><span class="gem">'+hab.emoji+'</span><div class="glb"><div class="gnn">'+hab.name+'</div><div class="gct">'+hab.cat+(hs>1?' · '+hs+'d 🔥':'')+'</div></div><button class="gdel" onclick="delHabit(event,'+hab.id+')">✕</button></div>';
+      for(var i=0;i<days.length;i++){
+        var d=days[i], k=dkey(d), fut=isFut(d);
+        ensure(k);
+        var done=state.history[k].done.indexOf(hab.id)>-1;
+        h+='<div class="gtc'+(done?' done':'')+(fut?' fut':'')+'"'+(fut?'':' onclick="toggle(\''+k+'\','+hab.id+')"')+'><div class="dot"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 3.5L3.5 6L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>';
+      }
+    }
+  }
+
+  // totals
+  h+='<div class="gtr">Week avg</div>';
+  for(var i=0;i<days.length;i++){
+    var d=days[i], k=dkey(d), fut=isFut(d), pct=fut?null:dayPct(k), col=fut?'#6B6966':barCol(pct||0);
+    h+='<div class="gtr"><span class="gtv" style="color:'+col+'">'+(fut?'–':pct+'%')+'</span></div>';
+  }
+
+  document.getElementById('grid').innerHTML=h;
+}
+
+function toggle(k,id){
+  ensure(k);
+  var c=state.history[k].done, idx=c.indexOf(id);
+  if(idx>-1) c.splice(idx,1); else c.push(id);
+  renderAll();
+}
+
+function addHabit(){
+  var inp=document.getElementById('inp'), name=inp.value.trim();
+  if(!name) return;
+  state.habits.push({id:state.nextId++,name:name,emoji:EMOJIS[Math.floor(Math.random()*EMOJIS.length)],cat:CATS[Math.floor(Math.random()*CATS.length)]});
+  inp.value=''; renderAll();
+}
+
+function delHabit(e,id){
+  e.stopPropagation();
+  state.habits=state.habits.filter(function(h){return h.id!==id;});
+  var keys=Object.keys(state.history);
+  for(var i=0;i<keys.length;i++){
+    var d=state.history[keys[i]];
+    d.done=d.done.filter(function(c){return c!==id;});
+  }
+  renderAll();
+}
+
+function shiftWeek(dir){ weekOffset=Math.min(0,weekOffset+dir); renderGrid(); }
+
+function renderAll(){ renderHero(); renderStats(); renderGrid(); }
+
+// datetime
+(function(){
+  var now=new Date();
+  document.getElementById('todaylbl').textContent=DAYS[now.getDay()]+' · '+MONTHS[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+  document.getElementById('hday').textContent=DAYS[now.getDay()];
+  document.getElementById('hdate').textContent=MONTHS[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+  function tick(){
+    var t=new Date();
+    document.getElementById('clock').textContent=pad(t.getHours())+':'+pad(t.getMinutes())+':'+pad(t.getSeconds());
+  }
+  tick(); setInterval(tick,1000);
+})();
+
+document.getElementById('inp').addEventListener('keydown',function(e){if(e.key==='Enter')addHabit();});
+ensure(TODAY);
+renderAll();
+</script>
+</body>
+</html>
